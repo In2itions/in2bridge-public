@@ -1,5 +1,5 @@
 param(
-    [string]$Version = "0.1.0",
+    [string]$Version = "0.8.0",
     [string]$Configuration = "release"
 )
 
@@ -64,4 +64,3 @@ Write-Host "Release staging completed:"
 Write-Host "  $stagingDir"
 Write-Host "Manifest:"
 Write-Host "  $(Join-Path $packagesDir "release-manifest.json")"
-

@@ -1,6 +1,6 @@
 {
   "name": "in2bridge-runtime",
-  "version": "0.1.0",
+  "version": "0.8.0",
   "description": "Version-pinned media and transport runtime shipped with in2bridge.",
   "components": [
     {
@@ -29,4 +29,3 @@
     }
   ]
 }
-
