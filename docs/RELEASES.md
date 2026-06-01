@@ -1,6 +1,6 @@
 # Releases
 
-## 0.8.0
+## 0.0.8
 
 Initial public release scaffolding for in2bridge customer packaging.
 
@@ -29,4 +29,3 @@ generation tooling.
 - Final bundled FFmpeg/SRT/RIST runtime payloads.
 - RPM package support.
 - Internal license generator.
-
