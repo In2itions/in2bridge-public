@@ -14,6 +14,17 @@ secrets, or customer-specific configs here.
 - `tools/` - release packaging helpers.
 - `docs/` - public install and upgrade documentation.
 
+## Build Debian packages
+
+On an Ubuntu build host with Rust, Node.js, npm, FFmpeg, SRT, and RIST tools
+installed:
+
+```bash
+VERSION=0.0.8 public-releases/tools/build-deb.sh
+```
+
+Generated packages are written to `public-releases/packages/`.
+
 ## Release policy
 
 - Database packages may be installed from the operating system repository.
@@ -31,4 +42,3 @@ secrets, or customer-specific configs here.
 - `/opt/in2bridge/runtime/lib`
 - `/etc/in2bridge/in2bridge.env`
 - `/etc/systemd/system/in2bridge-engine.service`
-

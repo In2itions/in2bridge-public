@@ -25,7 +25,5 @@ generation tooling.
 
 ### Not Included Yet
 
-- Final `.deb` package artifacts.
-- Final bundled FFmpeg/SRT/RIST runtime payloads.
 - RPM package support.
 - Internal license generator.
