@@ -41,7 +41,7 @@ download_release_script() {
   local script_name="$1"
   local script_path="${RELEASE_DIR}/install/${script_name}"
 
-  if [ -x "${script_path}" ]; then
+  if [ -f "${script_path}" ]; then
     printf "%s" "${script_path}"
     return
   fi
@@ -66,7 +66,7 @@ ensure_database_defaults() {
   case "${configure_local_db:-Y}" in
     y|Y|yes|YES)
       setup_script="$(download_release_script setup-database.sh)"
-      "${setup_script}"
+      bash "${setup_script}"
       ;;
     *)
       echo "Skipping local database setup. The application database step will ask for external DB credentials."
@@ -158,11 +158,11 @@ configure_app_database() {
   local db_script="${RELEASE_DIR}/install/configure-app-database.sh"
   local setup_env="/root/in2bridge/database.env"
 
-  if [ ! -x "${db_script}" ]; then
+  if [ ! -f "${db_script}" ]; then
     db_script="/opt/in2bridge/install/configure-app-database.sh"
   fi
 
-  if [ ! -x "${db_script}" ]; then
+  if [ ! -f "${db_script}" ]; then
     DOWNLOAD_DIR="${DOWNLOAD_DIR:-$(mktemp -d)}"
     db_script="${DOWNLOAD_DIR}/configure-app-database.sh"
     curl -fL "https://github.com/${PUBLIC_REPO}/releases/download/v${VERSION}/configure-app-database.sh" -o "${db_script}"
@@ -176,7 +176,7 @@ configure_app_database() {
     echo "No ${setup_env} found. You can run setup-database.sh first for a local database."
   fi
 
-  "${db_script}"
+  bash "${db_script}"
 }
 
 start_and_verify_service() {
