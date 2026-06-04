@@ -25,6 +25,10 @@ prompt_value() {
   local label="$1"
   local default_value="$2"
   local value
+  if [ "${IN2BRIDGE_NONINTERACTIVE:-}" = "1" ] || [ ! -t 0 ]; then
+    printf "%s" "${default_value}"
+    return
+  fi
   if ! read -r -p "${label} [${default_value}]: " value; then
     value=""
     echo >&2

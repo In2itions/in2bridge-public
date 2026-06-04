@@ -43,6 +43,10 @@ prompt_value() {
   local label="$1"
   local default_value="$2"
   local value
+  if [ "${IN2BRIDGE_NONINTERACTIVE:-}" = "1" ] || [ ! -t 0 ]; then
+    printf "%s" "${default_value}"
+    return
+  fi
   if ! read -r -p "${label} [${default_value}]: " value; then
     value=""
     echo >&2
@@ -174,7 +178,9 @@ main() {
   if [ -z "${DB_PASSWORD}" ]; then
     DB_PASSWORD="$(prompt_password)"
   else
-    if ! read -r -p "Reuse database password from ${DB_PASSWORD_SOURCE}? [Y/n]: " reuse; then
+    if [ "${IN2BRIDGE_NONINTERACTIVE:-}" = "1" ] || [ ! -t 0 ]; then
+      reuse="Y"
+    elif ! read -r -p "Reuse database password from ${DB_PASSWORD_SOURCE}? [Y/n]: " reuse; then
       reuse="Y"
       echo >&2
     fi
