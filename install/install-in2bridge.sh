@@ -155,11 +155,11 @@ export_setup_database_defaults() {
 }
 
 configure_app_database() {
-  local db_script="/opt/in2bridge/install/configure-app-database.sh"
+  local db_script="${RELEASE_DIR}/install/configure-app-database.sh"
   local setup_env="/root/in2bridge/database.env"
 
   if [ ! -x "${db_script}" ]; then
-    db_script="${RELEASE_DIR}/install/configure-app-database.sh"
+    db_script="/opt/in2bridge/install/configure-app-database.sh"
   fi
 
   if [ ! -x "${db_script}" ]; then
