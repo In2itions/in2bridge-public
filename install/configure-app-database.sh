@@ -43,7 +43,10 @@ prompt_value() {
   local label="$1"
   local default_value="$2"
   local value
-  read -r -p "${label} [${default_value}]: " value
+  if ! read -r -p "${label} [${default_value}]: " value; then
+    value=""
+    echo >&2
+  fi
   printf "%s" "${value:-${default_value}}"
 }
 
@@ -171,7 +174,10 @@ main() {
   if [ -z "${DB_PASSWORD}" ]; then
     DB_PASSWORD="$(prompt_password)"
   else
-    read -r -p "Reuse database password from ${DB_PASSWORD_SOURCE}? [Y/n]: " reuse
+    if ! read -r -p "Reuse database password from ${DB_PASSWORD_SOURCE}? [Y/n]: " reuse; then
+      reuse="Y"
+      echo >&2
+    fi
     case "${reuse:-Y}" in
       y|Y|yes|YES) ;;
       *) DB_PASSWORD="$(prompt_password)" ;;

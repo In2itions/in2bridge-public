@@ -25,7 +25,10 @@ prompt_value() {
   local label="$1"
   local default_value="$2"
   local value
-  read -r -p "${label} [${default_value}]: " value
+  if ! read -r -p "${label} [${default_value}]: " value; then
+    value=""
+    echo >&2
+  fi
   printf "%s" "${value:-${default_value}}"
 }
 
