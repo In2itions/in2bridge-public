@@ -10,6 +10,7 @@ DB_NAME="${IN2BRIDGE_DB_NAME:-in2bridge}"
 DB_USER="${IN2BRIDGE_DB_USER:-in2bridge}"
 DB_PASSWORD="${IN2BRIDGE_DB_PASSWORD:-}"
 DB_PASSWORD_SOURCE="prompt"
+NODE_ID="${IN2BRIDGE_NODE_ID:-}"
 
 require_root() {
   if [ "${EUID}" -ne 0 ]; then
@@ -106,6 +107,7 @@ load_existing_defaults() {
   DB_PORT="${DB_PORT:-3306}"
   DB_NAME="${DB_NAME:-in2bridge}"
   DB_USER="${DB_USER:-in2bridge}"
+  NODE_ID="${NODE_ID:-$(hostname)}"
 }
 
 test_database_connection() {
@@ -158,6 +160,7 @@ IN2BRIDGE_DB_PASSWORD=${DB_PASSWORD}
 IN2BRIDGE_FFMPEG_BIN=/opt/in2bridge/runtime/bin/ffmpeg
 IN2BRIDGE_FFPROBE_BIN=/opt/in2bridge/runtime/bin/ffprobe
 IN2BRIDGE_HA_ALLOW_VIP=1
+IN2BRIDGE_NODE_ID=${NODE_ID}
 LD_LIBRARY_PATH=/opt/in2bridge/runtime/lib
 PATH=/opt/in2bridge/runtime/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 EOF
