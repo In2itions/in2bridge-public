@@ -80,6 +80,8 @@ main() {
   fi
 
   rm -rf /etc/in2bridge /var/lib/in2bridge /var/log/in2bridge /opt/in2bridge /root/in2bridge
+  rm -f /etc/systemd/system/in2bridge-engine.service
+  rm -f /usr/local/bin/in2bridge-engine
   rm -f ./install-in2bridge.sh ./setup-database.sh ./configure-app-database.sh ./cleanup-in2bridge.sh
 
   if [ "${DROP_DATABASE}" = true ]; then
