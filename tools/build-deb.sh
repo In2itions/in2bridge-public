@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-VERSION="${VERSION:-0.0.8}"
+VERSION="${VERSION:-0.0.9}"
 ARCH="${ARCH:-amd64}"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -19,16 +19,13 @@ require_cmd() {
   fi
 }
 
-copy_binary_with_libs() {
+copy_linked_libs() {
   local binary="$1"
-  local target_bin_dir="$2"
-  local target_lib_dir="$3"
+  local target_lib_dir="$2"
 
   if [ -z "${binary}" ] || [ ! -x "${binary}" ]; then
     return 0
   fi
-
-  install -m 0755 "${binary}" "${target_bin_dir}/$(basename "${binary}")"
 
   ldd "${binary}" 2>/dev/null \
     | awk '
@@ -51,13 +48,34 @@ copy_binary_with_libs() {
             ;;
         esac
         cp -a "${lib}" "${target_lib_dir}/"
+        if [ -L "${lib}" ]; then
+          local resolved_lib
+          resolved_lib="$(readlink -f "${lib}" || true)"
+          if [ -n "${resolved_lib}" ] && [ -f "${resolved_lib}" ]; then
+            cp -a "${resolved_lib}" "${target_lib_dir}/"
+          fi
+        fi
       done
+}
+
+copy_binary_with_libs() {
+  local binary="$1"
+  local target_bin_dir="$2"
+  local target_lib_dir="$3"
+
+  if [ -z "${binary}" ] || [ ! -x "${binary}" ]; then
+    return 0
+  fi
+
+  install -m 0755 "${binary}" "${target_bin_dir}/$(basename "${binary}")"
+  copy_linked_libs "${binary}" "${target_lib_dir}"
 }
 
 write_control() {
   local package_root="$1"
   local package_name="$2"
   local description="$3"
+  local depends="${4:-}"
 
   install -d -m 0755 "${package_root}/DEBIAN"
   cat >"${package_root}/DEBIAN/control" <<EOF
@@ -67,6 +85,13 @@ Section: video
 Priority: optional
 Architecture: ${ARCH}
 Maintainer: In2itions <support@in2itions.com>
+EOF
+  if [ -n "${depends}" ]; then
+    cat >>"${package_root}/DEBIAN/control" <<EOF
+Depends: ${depends}
+EOF
+  fi
+  cat >>"${package_root}/DEBIAN/control" <<EOF
 Description: ${description}
 EOF
 }
@@ -87,6 +112,7 @@ build_runtime_package() {
   copy_binary_with_libs "$(command -v srt-tunnel || true)" "${bin_dir}" "${lib_dir}"
   copy_binary_with_libs "$(command -v ristsender || true)" "${bin_dir}" "${lib_dir}"
   copy_binary_with_libs "$(command -v ristreceiver || true)" "${bin_dir}" "${lib_dir}"
+  copy_linked_libs "${REPO_ROOT}/target/release/in2bridge-engine" "${lib_dir}"
 
   cat >"${root}/opt/in2bridge/runtime/VERSIONS" <<EOF
 in2bridge-runtime ${VERSION}
@@ -96,6 +122,30 @@ srt-live-transmit: $(srt-live-transmit -version 2>&1 | head -n 1 || echo "not fo
 ristsender: $(ristsender --version 2>&1 | head -n 1 || echo "not found")
 ristreceiver: $(ristreceiver --version 2>&1 | head -n 1 || echo "not found")
 EOF
+
+  cat >"${root}/DEBIAN/postinst" <<'EOF'
+#!/usr/bin/env bash
+set -e
+
+rm -f /etc/ld.so.conf.d/in2bridge-runtime.conf
+
+if command -v ldconfig >/dev/null 2>&1; then
+  ldconfig || true
+fi
+EOF
+
+  cat >"${root}/DEBIAN/postrm" <<'EOF'
+#!/usr/bin/env bash
+set -e
+
+rm -f /etc/ld.so.conf.d/in2bridge-runtime.conf
+
+if command -v ldconfig >/dev/null 2>&1; then
+  ldconfig || true
+fi
+EOF
+
+  chmod 0755 "${root}/DEBIAN/postinst" "${root}/DEBIAN/postrm"
 
   dpkg-deb --build --root-owner-group "${root}" "${PACKAGES_DIR}/in2bridge-runtime_${VERSION}_${ARCH}.deb"
 }
@@ -109,16 +159,21 @@ build_engine_package() {
     "${root}/usr/bin" \
     "${root}/opt/in2bridge/gui" \
     "${root}/opt/in2bridge/db" \
+    "${root}/opt/in2bridge/install" \
     "${root}/etc/in2bridge" \
+    "${root}/etc/sysctl.d" \
     "${root}/lib/systemd/system" \
     "${root}/var/lib/in2bridge" \
     "${root}/var/log/in2bridge"
 
-  write_control "${root}" "in2bridge-engine" "in2bridge transport engine and management UI"
+  write_control "${root}" "in2bridge-engine" "in2bridge transport engine and management UI" "in2bridge-runtime (= ${VERSION})"
 
   install -m 0755 "${REPO_ROOT}/target/release/in2bridge-engine" "${root}/usr/bin/in2bridge-engine"
   cp -a "${REPO_ROOT}/gui/dist" "${root}/opt/in2bridge/gui/"
   cp -a "${REPO_ROOT}/db/migrations" "${root}/opt/in2bridge/db/"
+  install -m 0755 "${REPO_ROOT}/public-releases/install/setup-database.sh" "${root}/opt/in2bridge/install/setup-database.sh"
+  install -m 0755 "${REPO_ROOT}/public-releases/install/configure-app-database.sh" "${root}/opt/in2bridge/install/configure-app-database.sh"
+  install -m 0755 "${REPO_ROOT}/public-releases/install/cleanup-in2bridge.sh" "${root}/opt/in2bridge/install/cleanup-in2bridge.sh"
 
   cat >"${root}/etc/in2bridge/in2bridge.env.example" <<'EOF'
 RUST_LOG=in2bridge_engine=info,info
@@ -126,16 +181,28 @@ IN2BRIDGE_CONFIG_FROM_DB=true
 IN2BRIDGE_LOG_DIR=/var/log/in2bridge
 IN2BRIDGE_GUI_DIST=/opt/in2bridge/gui/dist
 IN2BRIDGE_PREVIEW_DIR=/var/lib/in2bridge/preview
+IN2BRIDGE_MANAGEMENT_LISTEN_ADDRESS=0.0.0.0:8090
 IN2BRIDGE_DB_HOST=localhost
 IN2BRIDGE_DB_PORT=3306
 IN2BRIDGE_DB_NAME=in2bridge
 IN2BRIDGE_DB_USER=in2bridge
-IN2BRIDGE_DB_PASSWORD=change-this-password
+IN2BRIDGE_DB_PASSWORD=set-during-install
 IN2BRIDGE_FFMPEG_BIN=/opt/in2bridge/runtime/bin/ffmpeg
 IN2BRIDGE_FFPROBE_BIN=/opt/in2bridge/runtime/bin/ffprobe
 IN2BRIDGE_HA_ALLOW_VIP=1
 LD_LIBRARY_PATH=/opt/in2bridge/runtime/lib
 PATH=/opt/in2bridge/runtime/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+EOF
+
+  cat >"${root}/etc/sysctl.d/90-in2bridge-transport.conf" <<'EOF'
+# in2bridge transport receive buffers.
+# UDP multicast and high-bitrate TS inputs need more than the Linux default
+# 212 KB socket buffer to avoid avoidable kernel drops during bursts.
+net.core.rmem_max = 67108864
+net.core.rmem_default = 8388608
+net.core.wmem_max = 67108864
+net.core.wmem_default = 8388608
+net.core.netdev_max_backlog = 10000
 EOF
 
   cat >"${root}/lib/systemd/system/in2bridge-engine.service" <<'EOF'
@@ -181,6 +248,18 @@ if [ ! -f /etc/in2bridge/in2bridge.env ]; then
   cp /etc/in2bridge/in2bridge.env.example /etc/in2bridge/in2bridge.env
   chown root:in2bridge /etc/in2bridge/in2bridge.env
   chmod 0640 /etc/in2bridge/in2bridge.env
+fi
+
+if grep -q '^IN2BRIDGE_HA_ALLOW_VIP=' /etc/in2bridge/in2bridge.env; then
+  sed -i 's/^IN2BRIDGE_HA_ALLOW_VIP=.*/IN2BRIDGE_HA_ALLOW_VIP=1/' /etc/in2bridge/in2bridge.env
+else
+  printf '\nIN2BRIDGE_HA_ALLOW_VIP=1\n' >> /etc/in2bridge/in2bridge.env
+fi
+chown root:in2bridge /etc/in2bridge/in2bridge.env
+chmod 0640 /etc/in2bridge/in2bridge.env
+
+if command -v sysctl >/dev/null 2>&1; then
+  sysctl --system >/dev/null 2>&1 || true
 fi
 
 if command -v systemctl >/dev/null 2>&1; then
@@ -236,4 +315,3 @@ main() {
 }
 
 main "$@"
-

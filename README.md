@@ -20,7 +20,7 @@ On an Ubuntu build host with Rust, Node.js, npm, FFmpeg, SRT, and RIST tools
 installed:
 
 ```bash
-VERSION=0.0.8 public-releases/tools/build-deb.sh
+VERSION=0.0.9 public-releases/tools/build-deb.sh
 ```
 
 Generated packages are written to `public-releases/packages/`.

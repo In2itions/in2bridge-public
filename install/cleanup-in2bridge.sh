@@ -13,6 +13,7 @@ Removes in2bridge from a test node:
   - stops and disables in2bridge-engine.service
   - purges in2bridge-engine and in2bridge-runtime packages
   - removes /etc/in2bridge, /var/lib/in2bridge, /var/log/in2bridge, /opt/in2bridge
+  - removes in2bridge transport sysctl tuning
   - removes local downloaded public installer scripts from the current directory
 
 With --drop-database it also drops the in2bridge database and application users.
@@ -80,9 +81,14 @@ main() {
   fi
 
   rm -rf /etc/in2bridge /var/lib/in2bridge /var/log/in2bridge /opt/in2bridge /root/in2bridge
+  rm -f /etc/sysctl.d/90-in2bridge-transport.conf
   rm -f /etc/systemd/system/in2bridge-engine.service
   rm -f /usr/local/bin/in2bridge-engine
   rm -f ./install-in2bridge.sh ./setup-database.sh ./configure-app-database.sh ./cleanup-in2bridge.sh
+
+  if command -v sysctl >/dev/null 2>&1; then
+    sysctl --system >/dev/null 2>&1 || true
+  fi
 
   if [ "${DROP_DATABASE}" = true ]; then
     drop_database
