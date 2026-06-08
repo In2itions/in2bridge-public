@@ -173,6 +173,7 @@ build_engine_package() {
   cp -a "${REPO_ROOT}/db/migrations" "${root}/opt/in2bridge/db/"
   install -m 0755 "${REPO_ROOT}/public-releases/install/setup-database.sh" "${root}/opt/in2bridge/install/setup-database.sh"
   install -m 0755 "${REPO_ROOT}/public-releases/install/configure-app-database.sh" "${root}/opt/in2bridge/install/configure-app-database.sh"
+  install -m 0755 "${REPO_ROOT}/public-releases/install/configure-letsencrypt-management-https.sh" "${root}/opt/in2bridge/install/configure-letsencrypt-management-https.sh"
   install -m 0755 "${REPO_ROOT}/public-releases/install/cleanup-in2bridge.sh" "${root}/opt/in2bridge/install/cleanup-in2bridge.sh"
 
   cat >"${root}/etc/in2bridge/in2bridge.env.example" <<'EOF'

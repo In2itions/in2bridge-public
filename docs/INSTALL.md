@@ -43,6 +43,64 @@ For test nodes, remove the application and optionally drop the test database:
 sudo /opt/in2bridge/install/cleanup-in2bridge.sh --drop-database
 ```
 
+## Management HTTPS With Let's Encrypt
+
+The in2bridge management UI/API can use the original certbot paths under
+`/etc/letsencrypt/live/<domain>/`. This keeps certificate renewal automated by
+Let's Encrypt. The only requirement is that the `in2bridge` service user can
+traverse the Let's Encrypt directories and read the certificate chain and
+private key.
+
+After certbot has created a certificate, run:
+
+```bash
+sudo /opt/in2bridge/install/configure-letsencrypt-management-https.sh in2bridge1.example.com
+```
+
+The script:
+
+1. Creates the `ssl-cert` group if the OS does not provide it.
+2. Adds the `in2bridge` service user to that group.
+3. Grants group traversal on `/etc/letsencrypt`, `live`, and `archive`.
+4. Grants group read access to the selected domain certificate files.
+5. Verifies that `in2bridge` can read `fullchain.pem`, `privkey.pem`, and
+   `chain.pem`.
+6. Prints the exact paths to use in General > Management access.
+
+Use these values in the GUI:
+
+```text
+Certificate chain path: /etc/letsencrypt/live/<domain>/fullchain.pem
+Private key path:       /etc/letsencrypt/live/<domain>/privkey.pem
+CA certificate path:    /etc/letsencrypt/live/<domain>/chain.pem
+```
+
+To also save the HTTPS settings directly into the in2bridge database and
+restart the service:
+
+```bash
+sudo /opt/in2bridge/install/configure-letsencrypt-management-https.sh in2bridge1.example.com --apply-db --restart
+```
+
+Expected service log after HTTPS is enabled:
+
+```text
+management API listening with HTTPS listen_address="0.0.0.0:8090"
+```
+
+Verify locally:
+
+```bash
+curl -vk https://127.0.0.1:8090/api/health
+```
+
+If the browser is opened by IP address, it may show a certificate hostname
+warning. Use the DNS name from the certificate, for example:
+
+```text
+https://in2bridge1.example.com:8090
+```
+
 ## Runtime policy
 
 The installer must use in2bridge-provided FFmpeg, SRT, and RIST runtime files
