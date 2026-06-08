@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-VERSION="${VERSION:-0.0.10}"
+VERSION="${VERSION:-0.0.11}"
 ARCH="${ARCH:-amd64}"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -11,6 +11,7 @@ PACKAGES_DIR="${RELEASE_ROOT}/packages"
 BUILD_ROOT="${RELEASE_ROOT}/build/deb"
 RUNTIME_ROOT="${BUILD_ROOT}/in2bridge-runtime"
 ENGINE_ROOT="${BUILD_ROOT}/in2bridge-engine"
+RUNTIME_INSTALL_ROOT="/opt/in2bridge/runtime"
 
 require_cmd() {
   if ! command -v "$1" >/dev/null 2>&1; then
@@ -47,28 +48,106 @@ copy_linked_libs() {
             continue
             ;;
         esac
-        cp -a "${lib}" "${target_lib_dir}/"
+        copy_runtime_lib "${lib}" "${target_lib_dir}"
         if [ -L "${lib}" ]; then
           local resolved_lib
           resolved_lib="$(readlink -f "${lib}" || true)"
           if [ -n "${resolved_lib}" ] && [ -f "${resolved_lib}" ]; then
-            cp -a "${resolved_lib}" "${target_lib_dir}/"
+            copy_runtime_lib "${resolved_lib}" "${target_lib_dir}"
           fi
         fi
       done
+}
+
+copy_runtime_lib() {
+  local lib="$1"
+  local target_lib_dir="$2"
+  local target="${target_lib_dir}/$(basename "${lib}")"
+  local source_real
+  local target_real
+
+  [ -f "${lib}" ] || [ -L "${lib}" ] || return 0
+
+  source_real="$(readlink -f "${lib}" || true)"
+  target_real="$(readlink -f "${target}" 2>/dev/null || true)"
+  if [ -n "${source_real}" ] && [ -n "${target_real}" ] && [ "${source_real}" = "${target_real}" ]; then
+    return 0
+  fi
+
+  cp -a "${lib}" "${target_lib_dir}/"
+}
+
+copy_media_library_family() {
+  local binary="$1"
+  local target_lib_dir="$2"
+  local binary_dir
+  local lib_dir
+
+  if [ -z "${binary}" ] || [ ! -x "${binary}" ]; then
+    return 0
+  fi
+
+  binary_dir="$(dirname "$(readlink -f "${binary}")")"
+
+  for lib_dir in "${binary_dir}" /usr/lib /usr/lib64 /usr/lib/x86_64-linux-gnu /lib/x86_64-linux-gnu; do
+    [ -d "${lib_dir}" ] || continue
+    find "${lib_dir}" -maxdepth 1 -type f,l \
+      \( -name 'libav*.so*' -o -name 'libsw*.so*' -o -name 'libpostproc*.so*' \) \
+      | while read -r media_lib; do
+          copy_runtime_lib "${media_lib}" "${target_lib_dir}"
+        done
+  done
+}
+
+copy_linked_lib_closure() {
+  local target_lib_dir="$1"
+  local scan_dir="$2"
+  local before
+  local after
+
+  while true; do
+    before="$(find "${target_lib_dir}" -maxdepth 1 -type f,l | wc -l)"
+    find "${scan_dir}" "${target_lib_dir}" -maxdepth 1 -type f,l 2>/dev/null \
+      | while read -r item; do
+          [ -x "${item}" ] || [ "${item##*.}" = "so" ] || [[ "$(basename "${item}")" == *.so* ]] || continue
+          LD_LIBRARY_PATH="${target_lib_dir}:${LD_LIBRARY_PATH:-}" copy_linked_libs "${item}" "${target_lib_dir}"
+        done
+    after="$(find "${target_lib_dir}" -maxdepth 1 -type f,l | wc -l)"
+    [ "${after}" -gt "${before}" ] || break
+  done
+}
+
+write_runtime_wrapper() {
+  local wrapper_path="$1"
+  local real_name="$2"
+
+  cat >"${wrapper_path}" <<EOF
+#!/usr/bin/env bash
+set -e
+export LD_LIBRARY_PATH="${RUNTIME_INSTALL_ROOT}/lib:\${LD_LIBRARY_PATH:-}"
+exec "${RUNTIME_INSTALL_ROOT}/libexec/${real_name}" "\$@"
+EOF
+  chmod 0755 "${wrapper_path}"
 }
 
 copy_binary_with_libs() {
   local binary="$1"
   local target_bin_dir="$2"
   local target_lib_dir="$3"
+  local target_exec_dir="${4:-${target_bin_dir}}"
+  local name
 
   if [ -z "${binary}" ] || [ ! -x "${binary}" ]; then
     return 0
   fi
 
-  install -m 0755 "${binary}" "${target_bin_dir}/$(basename "${binary}")"
+  name="$(basename "${binary}")"
+  install -m 0755 "${binary}" "${target_exec_dir}/${name}"
+  if [ "${target_exec_dir}" != "${target_bin_dir}" ]; then
+    write_runtime_wrapper "${target_bin_dir}/${name}" "${name}"
+  fi
   copy_linked_libs "${binary}" "${target_lib_dir}"
+  copy_media_library_family "${binary}" "${target_lib_dir}"
 }
 
 write_control() {
@@ -99,20 +178,22 @@ EOF
 build_runtime_package() {
   local root="${RUNTIME_ROOT}"
   local bin_dir="${root}/opt/in2bridge/runtime/bin"
+  local exec_dir="${root}/opt/in2bridge/runtime/libexec"
   local lib_dir="${root}/opt/in2bridge/runtime/lib"
 
   rm -rf "${root}"
-  install -d -m 0755 "${bin_dir}" "${lib_dir}"
+  install -d -m 0755 "${bin_dir}" "${exec_dir}" "${lib_dir}"
   write_control "${root}" "in2bridge-runtime" "Pinned in2bridge FFmpeg, SRT, and RIST runtime"
 
-  copy_binary_with_libs "$(command -v ffmpeg || true)" "${bin_dir}" "${lib_dir}"
-  copy_binary_with_libs "$(command -v ffprobe || true)" "${bin_dir}" "${lib_dir}"
-  copy_binary_with_libs "$(command -v srt-live-transmit || true)" "${bin_dir}" "${lib_dir}"
-  copy_binary_with_libs "$(command -v srt-file-transmit || true)" "${bin_dir}" "${lib_dir}"
-  copy_binary_with_libs "$(command -v srt-tunnel || true)" "${bin_dir}" "${lib_dir}"
-  copy_binary_with_libs "$(command -v ristsender || true)" "${bin_dir}" "${lib_dir}"
-  copy_binary_with_libs "$(command -v ristreceiver || true)" "${bin_dir}" "${lib_dir}"
+  copy_binary_with_libs "$(command -v ffmpeg || true)" "${bin_dir}" "${lib_dir}" "${exec_dir}"
+  copy_binary_with_libs "$(command -v ffprobe || true)" "${bin_dir}" "${lib_dir}" "${exec_dir}"
+  copy_binary_with_libs "$(command -v srt-live-transmit || true)" "${bin_dir}" "${lib_dir}" "${exec_dir}"
+  copy_binary_with_libs "$(command -v srt-file-transmit || true)" "${bin_dir}" "${lib_dir}" "${exec_dir}"
+  copy_binary_with_libs "$(command -v srt-tunnel || true)" "${bin_dir}" "${lib_dir}" "${exec_dir}"
+  copy_binary_with_libs "$(command -v ristsender || true)" "${bin_dir}" "${lib_dir}" "${exec_dir}"
+  copy_binary_with_libs "$(command -v ristreceiver || true)" "${bin_dir}" "${lib_dir}" "${exec_dir}"
   copy_linked_libs "${REPO_ROOT}/target/release/in2bridge-engine" "${lib_dir}"
+  copy_linked_lib_closure "${lib_dir}" "${exec_dir}"
 
   cat >"${root}/opt/in2bridge/runtime/VERSIONS" <<EOF
 in2bridge-runtime ${VERSION}

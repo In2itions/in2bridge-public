@@ -3,7 +3,7 @@ set -euo pipefail
 
 RELEASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 PACKAGES_DIR="${RELEASE_DIR}/packages"
-VERSION="${IN2BRIDGE_VERSION:-0.0.10}"
+VERSION="${IN2BRIDGE_VERSION:-0.0.11}"
 PUBLIC_REPO="${IN2BRIDGE_PUBLIC_REPO:-In2itions/in2bridge-public}"
 DOWNLOAD_DIR=""
 
@@ -98,6 +98,23 @@ verify_engine_linkage() {
   fi
 }
 
+verify_runtime_tools() {
+  local tool
+
+  for tool in ffmpeg ffprobe; do
+    if [ ! -x "/opt/in2bridge/runtime/bin/${tool}" ]; then
+      echo "Runtime tool missing: /opt/in2bridge/runtime/bin/${tool}" >&2
+      exit 1
+    fi
+
+    if ! "/opt/in2bridge/runtime/bin/${tool}" -version >/dev/null 2>&1; then
+      echo "Runtime tool failed to start: /opt/in2bridge/runtime/bin/${tool}" >&2
+      echo "Check /opt/in2bridge/runtime/lib and runtime package contents." >&2
+      exit 1
+    fi
+  done
+}
+
 install_deb_packages() {
   local runtime_deb
   local engine_deb
@@ -117,6 +134,7 @@ install_deb_packages() {
   dpkg -i "${runtime_deb}"
   apt-get -f install -y
   run_ldconfig
+  verify_runtime_tools
 
   dpkg -i "${engine_deb}"
   apt-get -f install -y
