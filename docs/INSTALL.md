@@ -75,11 +75,22 @@ Private key path:       /etc/letsencrypt/live/<domain>/privkey.pem
 CA certificate path:    /etc/letsencrypt/live/<domain>/chain.pem
 ```
 
-To also save the HTTPS settings directly into the in2bridge database and
-restart the service:
+Then enable HTTPS from the GUI:
+
+1. Open Settings > General > Management access.
+2. Select the management bind IP and port.
+3. Enable HTTPS.
+4. Paste the three certificate paths printed by the script.
+5. Save the settings and restart the service.
+
+The helper intentionally does not write directly to the database. Database
+changes should go through the application settings layer so validation,
+auditing, and future HA sync behavior stay consistent.
+
+If you only need to restart the service after changing settings, run:
 
 ```bash
-sudo /opt/in2bridge/install/configure-letsencrypt-management-https.sh in2bridge1.example.com --apply-db --restart
+sudo /opt/in2bridge/install/configure-letsencrypt-management-https.sh in2bridge1.example.com --restart
 ```
 
 Expected service log after HTTPS is enabled:
