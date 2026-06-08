@@ -3,7 +3,7 @@ set -euo pipefail
 
 RELEASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 PACKAGES_DIR="${RELEASE_DIR}/packages"
-VERSION="${IN2BRIDGE_VERSION:-0.0.11}"
+VERSION="${IN2BRIDGE_VERSION:-0.0.12}"
 PUBLIC_REPO="${IN2BRIDGE_PUBLIC_REPO:-In2itions/in2bridge-public}"
 DOWNLOAD_DIR=""
 
@@ -131,14 +131,10 @@ install_deb_packages() {
     curl -fL "https://github.com/${PUBLIC_REPO}/releases/download/v${VERSION}/in2bridge-engine_${VERSION}_amd64.deb" -o "${engine_deb}"
   fi
 
-  dpkg -i "${runtime_deb}"
+  dpkg -i "${runtime_deb}" "${engine_deb}"
   apt-get -f install -y
   run_ldconfig
   verify_runtime_tools
-
-  dpkg -i "${engine_deb}"
-  apt-get -f install -y
-  run_ldconfig
   verify_engine_linkage
 }
 

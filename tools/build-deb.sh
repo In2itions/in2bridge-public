@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-VERSION="${VERSION:-0.0.11}"
+VERSION="${VERSION:-0.0.12}"
 ARCH="${ARCH:-amd64}"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -24,7 +24,7 @@ copy_linked_libs() {
   local binary="$1"
   local target_lib_dir="$2"
 
-  if [ -z "${binary}" ] || [ ! -x "${binary}" ]; then
+  if [ -z "${binary}" ] || [ ! -e "${binary}" ]; then
     return 0
   fi
 
@@ -74,7 +74,14 @@ copy_runtime_lib() {
     return 0
   fi
 
-  cp -a "${lib}" "${target_lib_dir}/"
+  if [ -L "${lib}" ]; then
+    if [ -n "${source_real}" ] && [ -f "${source_real}" ]; then
+      copy_runtime_lib "${source_real}" "${target_lib_dir}"
+      ln -sfn "$(basename "${source_real}")" "${target}"
+    fi
+  else
+    cp -a "${lib}" "${target_lib_dir}/"
+  fi
 }
 
 copy_media_library_family() {
@@ -109,7 +116,7 @@ copy_linked_lib_closure() {
     before="$(find "${target_lib_dir}" -maxdepth 1 -type f,l | wc -l)"
     find "${scan_dir}" "${target_lib_dir}" -maxdepth 1 -type f,l 2>/dev/null \
       | while read -r item; do
-          [ -x "${item}" ] || [ "${item##*.}" = "so" ] || [[ "$(basename "${item}")" == *.so* ]] || continue
+          [[ "$(basename "${item}")" == *.so* ]] || [ -x "${item}" ] || continue
           LD_LIBRARY_PATH="${target_lib_dir}:${LD_LIBRARY_PATH:-}" copy_linked_libs "${item}" "${target_lib_dir}"
         done
     after="$(find "${target_lib_dir}" -maxdepth 1 -type f,l | wc -l)"
