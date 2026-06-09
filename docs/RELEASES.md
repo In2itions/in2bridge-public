@@ -1,6 +1,6 @@
 # Releases
 
-## 0.0.9
+## 0.0.12
 
 Public release package refresh for current in2bridge engine and management UI.
 
@@ -8,7 +8,7 @@ Public release package refresh for current in2bridge engine and management UI.
 
 - Updated engine and GUI package payloads.
 - Runtime package with pinned FFmpeg, SRT, and RIST runtime libraries.
-- Bootstrap installer defaulting to `v0.0.9`.
+- Bootstrap installer defaulting to `v0.0.12`.
 - Database setup, application database configuration, and cleanup scripts.
 - Transport socket buffer sysctl defaults for UDP/SRT/RIST workloads.
 - HA VIP enablement in the installed service environment.
