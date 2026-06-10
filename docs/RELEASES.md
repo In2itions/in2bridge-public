@@ -1,5 +1,16 @@
 # Releases
 
+## 0.0.13
+
+Public release package refresh for analyzer preview reliability.
+
+### Included
+
+- Fixes SRT analyzer preview URI normalization.
+- Preview sessions now resolve DB endpoint settings before starting FFmpeg, so SRT previews include stored passphrases and key length.
+- Output previews for SRT listener endpoints connect as callers instead of trying to bind the already-owned listener port.
+- Bootstrap installer defaulting to `v0.0.13`.
+
 ## 0.0.12
 
 Public release package refresh for current in2bridge engine and management UI.
