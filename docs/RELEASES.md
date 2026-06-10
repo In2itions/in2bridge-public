@@ -1,5 +1,16 @@
 # Releases
 
+## 0.0.21
+
+Public release package refresh for SRT listener Analyzer preview.
+
+### Included
+
+- Makes SRT listener output preview prefer the configured local bind interface when present.
+- Fixes Analyzer preview attempting to connect to a public/customer-facing listener address that is not the local preview target.
+- Adds regression coverage for SRT listener preview URI selection with a separate configured address and bind interface.
+- Bootstrap installer defaulting to `v0.0.21`.
+
 ## 0.0.20
 
 Public release package refresh for HA page input stability.
