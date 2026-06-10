@@ -1,9 +1,15 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-VERSION="${VERSION:-0.0.17}"
+VERSION="${VERSION:-0.0.18}"
 ARCH="${ARCH:-amd64}"
-CARGO_BIN="${CARGO:-cargo}"
+if [ -n "${CARGO:-}" ]; then
+  CARGO_BIN="${CARGO}"
+elif [ -x "${HOME}/.cargo/bin/cargo" ]; then
+  CARGO_BIN="${HOME}/.cargo/bin/cargo"
+else
+  CARGO_BIN="cargo"
+fi
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 RELEASE_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"

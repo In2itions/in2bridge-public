@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-installer="${repo_root}/install/install-in2bridge.sh"
+repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+installer="${repo_root}/public-releases/install/install-in2bridge.sh"
 
 if grep -q 'sort | tail' "${installer}"; then
   echo "install-in2bridge.sh must not select packages with sort | tail; it can pick 0.0.9 over 0.0.14." >&2

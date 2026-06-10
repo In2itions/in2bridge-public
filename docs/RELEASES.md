@@ -1,5 +1,17 @@
 # Releases
 
+## 0.0.18
+
+Public release package refresh for smoother Analyzer preview playback.
+
+### Included
+
+- Uses stable HLS preview buffering instead of low-latency/no-buffer FFmpeg and hls.js settings.
+- Keeps SRT listener outputs limited to one external/customer receiver while still allowing the internal Analyzer preview client.
+- Sends live SRT output packets to external receivers before internal preview peers.
+- Caps internal Analyzer preview peer send blocking so preview playback cannot stall the live output path.
+- Bootstrap installer defaulting to `v0.0.18`.
+
 ## 0.0.17
 
 Public release package refresh for licensed SRT listener fanout behavior.
