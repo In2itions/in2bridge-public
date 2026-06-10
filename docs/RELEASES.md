@@ -1,5 +1,15 @@
 # Releases
 
+## 0.0.20
+
+Public release package refresh for HA page input stability.
+
+### Included
+
+- Fixes HA peer and VIP editable rows losing focus after one typed character.
+- Adds a GUI regression check that prevents editable HA rows from using mutable React keys.
+- Bootstrap installer defaulting to `v0.0.20`.
+
 ## 0.0.19
 
 Public release package refresh for safer HA configuration sync.
