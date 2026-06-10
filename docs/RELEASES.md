@@ -1,5 +1,16 @@
 # Releases
 
+## 0.0.17
+
+Public release package refresh for licensed SRT listener fanout behavior.
+
+### Included
+
+- Keeps SRT listener outputs limited to one external/customer receiver.
+- Allows internal Analyzer preview clients to join the same SRT output without consuming the customer receiver slot.
+- Adds regression coverage for SRT listener accept policy and internal preview classification.
+- Bootstrap installer defaulting to `v0.0.17`.
+
 ## 0.0.16
 
 Public release package refresh for SRT listener multi-client output.
