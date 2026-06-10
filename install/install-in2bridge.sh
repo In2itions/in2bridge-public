@@ -118,10 +118,10 @@ verify_runtime_tools() {
 install_deb_packages() {
   local runtime_deb
   local engine_deb
-  runtime_deb="$(ls "${PACKAGES_DIR}"/in2bridge-runtime_*.deb 2>/dev/null | sort | tail -n 1 || true)"
-  engine_deb="$(ls "${PACKAGES_DIR}"/in2bridge-engine_*.deb 2>/dev/null | sort | tail -n 1 || true)"
+  runtime_deb="${PACKAGES_DIR}/in2bridge-runtime_${VERSION}_amd64.deb"
+  engine_deb="${PACKAGES_DIR}/in2bridge-engine_${VERSION}_amd64.deb"
 
-  if [ -z "${runtime_deb}" ] || [ -z "${engine_deb}" ]; then
+  if [ ! -f "${runtime_deb}" ] || [ ! -f "${engine_deb}" ]; then
     DOWNLOAD_DIR="$(mktemp -d)"
     runtime_deb="${DOWNLOAD_DIR}/in2bridge-runtime_${VERSION}_amd64.deb"
     engine_deb="${DOWNLOAD_DIR}/in2bridge-engine_${VERSION}_amd64.deb"
