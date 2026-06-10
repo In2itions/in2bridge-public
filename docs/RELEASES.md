@@ -1,5 +1,16 @@
 # Releases
 
+## 0.0.14
+
+Public release package refresh for SRT analyzer preview with IP allowlists.
+
+### Included
+
+- Allows internal analyzer preview clients through SRT listener source allowlists using node-local listener addresses.
+- Uses a concrete bind interface for wildcard SRT listener previews.
+- Adds regression coverage for allowlisted SRT listener previews.
+- Bootstrap installer defaulting to `v0.0.14`.
+
 ## 0.0.13
 
 Public release package refresh for analyzer preview reliability.
