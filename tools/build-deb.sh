@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-VERSION="${VERSION:-0.0.18}"
+VERSION="${VERSION:-0.0.19}"
 ARCH="${ARCH:-amd64}"
 if [ -n "${CARGO:-}" ]; then
   CARGO_BIN="${CARGO}"

@@ -1,5 +1,17 @@
 # Releases
 
+## 0.0.19
+
+Public release package refresh for safer HA configuration sync.
+
+### Included
+
+- Prevents standby nodes from pushing stale configuration over the active node in active/standby clusters.
+- Rejects empty HA sync imports when the receiving node already has configured streams.
+- Adds drift protection for active/active sync when both nodes contain different non-empty stream configs.
+- Adds regression coverage for HA sync direction, empty imports, bootstrap imports, and conflicting active/active imports.
+- Bootstrap installer defaulting to `v0.0.19`.
+
 ## 0.0.18
 
 Public release package refresh for smoother Analyzer preview playback.
