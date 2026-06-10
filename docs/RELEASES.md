@@ -1,5 +1,17 @@
 # Releases
 
+## 0.0.16
+
+Public release package refresh for SRT listener multi-client output.
+
+### Included
+
+- Allows SRT listener outputs to serve multiple connected callers at the same time.
+- Fixes Analyzer preview getting stuck when VLC or another receiver is already joined to the same SRT output.
+- Keeps output counters based on source packets rather than multiplying bitrate by the number of connected SRT clients.
+- Adds Linux regression coverage proving one SRT listener output can feed two simultaneous callers.
+- Bootstrap installer defaulting to `v0.0.16`.
+
 ## 0.0.15
 
 Public release package refresh for stream lifecycle and analyzer preview stability.
