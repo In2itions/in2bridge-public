@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-VERSION="${VERSION:-0.0.12}"
+VERSION="${VERSION:-0.0.15}"
 ARCH="${ARCH:-amd64}"
+CARGO_BIN="${CARGO:-cargo}"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 RELEASE_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
@@ -380,7 +381,7 @@ EOF
 }
 
 main() {
-  require_cmd cargo
+  require_cmd "${CARGO_BIN}"
   require_cmd npm
   require_cmd dpkg-deb
   require_cmd ldd
@@ -391,7 +392,7 @@ main() {
   (cd "${REPO_ROOT}/gui" && npm run build)
 
   echo "Building engine..."
-  (cd "${REPO_ROOT}" && cargo build -p in2bridge-engine --release)
+  (cd "${REPO_ROOT}" && "${CARGO_BIN}" build -p in2bridge-engine --release)
 
   echo "Building runtime package..."
   build_runtime_package

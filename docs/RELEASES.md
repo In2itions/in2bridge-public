@@ -1,5 +1,16 @@
 # Releases
 
+## 0.0.15
+
+Public release package refresh for stream lifecycle and analyzer preview stability.
+
+### Included
+
+- Waits for aborted stream workers to finish cleanup before returning from stop operations.
+- Prevents config apply/start from racing against stale SRT listeners on unchanged or restarted outputs.
+- Adds regression coverage proving stop waits for worker cleanup before replacement can proceed.
+- Bootstrap installer defaulting to `v0.0.15`.
+
 ## 0.0.14
 
 Public release package refresh for SRT analyzer preview with IP allowlists.
