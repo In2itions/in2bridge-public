@@ -3,7 +3,7 @@ set -euo pipefail
 
 RELEASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 PACKAGES_DIR="${RELEASE_DIR}/packages"
-VERSION="${IN2BRIDGE_VERSION:-0.0.21}"
+VERSION="${IN2BRIDGE_VERSION:-0.0.22}"
 PUBLIC_REPO="${IN2BRIDGE_PUBLIC_REPO:-In2itions/in2bridge-public}"
 DOWNLOAD_DIR=""
 

@@ -1,3 +1,12 @@
+## 0.0.22
+
+Public release package refresh for HA sync diagnostics.
+
+### Included
+
+- Improves HA control-plane sync errors when a peer returns older JSON, HTML, license errors, or any response without local_checksum.
+- Adds regression coverage for current, legacy, and non-JSON HA sync peer responses.
+
 # Releases
 
 ## 0.0.21
