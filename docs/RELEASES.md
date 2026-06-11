@@ -1,3 +1,13 @@
+## 0.0.23
+
+Public release package refresh for HA active/standby config sync direction.
+
+### Included
+
+- Active/passive HA config sync now skips active/primary peers and targets enabled secondary peers only.
+- Sync target selection now treats runtime node identity as self, even when the editable node alias differs.
+- Adds regression coverage for active/passive and active/active config sync target selection.
+
 ## 0.0.22
 
 Public release package refresh for HA sync diagnostics.
