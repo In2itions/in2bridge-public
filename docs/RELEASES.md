@@ -1,3 +1,13 @@
+## 0.0.27
+
+Public release package refresh for config edit render stability.
+
+### Included
+
+- Fixes the Config edit modal render failure caused by the HA role interface option variable being referenced outside its component scope.
+- Adds a GUI source regression check for EndpointFormPanel HA interface role scope.
+- Bootstrap installer defaulting to `v0.0.27`.
+
 ## 0.0.23
 
 Public release package refresh for HA active/standby config sync direction.
